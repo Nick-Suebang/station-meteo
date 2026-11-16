@@ -26,6 +26,12 @@
     <Compile Include="..\CapteurCsv.cs" Link="Origine\CapteurCsv.cs" />
     <Compile Include="..\CapteurRandom.cs" Link="Origine\CapteurRandom.cs" />
     <Compile Include="..\DonneesCsv.cs" Link="Origine\DonneesCsv.cs" />
+    <Compile Include="..\DefinitionCapteur.cs" Link="Origine\DefinitionCapteur.cs" />
+  </ItemGroup>
+
+  <!-- Le fichier de relevés de la racine est intégré à l'application (pas de copie ni de téléchargement). -->
+  <ItemGroup>
+    <EmbeddedResource Include="..\donnees.csv" LogicalName="donnees.csv" />
   </ItemGroup>
 
   <ItemGroup>

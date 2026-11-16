@@ -1,34 +1,34 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Drawing;
 using ZedGraph;
 
 namespace station_meteo
 {
-    class ZedGraphique : IGraphique
+    /// <summary>Adapte un contrôle ZedGraph à l'interface IGraphique.</summary>
+    sealed class ZedGraphique : IGraphique
     {
-        private ZedGraphControl _zedGraph;
-        private PointPairList _points;
+        private readonly ZedGraphControl _zedGraph;
+        private readonly PointPairList _points = new PointPairList();
+        private readonly LineItem _courbe;
 
         public ZedGraphique(ZedGraphControl zedGraph)
         {
-            _zedGraph = zedGraph;
-            _points = new PointPairList();
-            _zedGraph.GraphPane.CurveList.Clear();
-            _zedGraph.GraphPane.AddCurve("", _points, System.Drawing.Color.Black, SymbolType.Diamond);
-            _zedGraph.GraphPane.XAxis.Type = AxisType.Date;
-            _zedGraph.GraphPane.XAxis.Scale.Format = "HH:mm:ss";
+            _zedGraph = zedGraph ?? throw new ArgumentNullException(nameof(zedGraph));
+            var pane = _zedGraph.GraphPane;
+            pane.CurveList.Clear();
+            _courbe = pane.AddCurve("", _points, Color.Black, SymbolType.Diamond);
+            pane.XAxis.Type = AxisType.Date;
+            pane.XAxis.Scale.Format = "HH:mm:ss";
         }
 
-        public void Configurer(string titre, string axeX, string axeY, System.Drawing.Color couleur)
+        public void Configurer(string titre, string axeX, string axeY, Color couleur)
         {
             var pane = _zedGraph.GraphPane;
             pane.Title.Text = titre;
             pane.XAxis.Title.Text = axeX;
             pane.YAxis.Title.Text = axeY;
-            ((LineItem)pane.CurveList[0]).Color = couleur;
+            _courbe.Color = couleur;
         }
 
         public void Effacer()
@@ -40,10 +40,7 @@ namespace station_meteo
         {
             Effacer();
             foreach (var (instant, valeur) in valeurs)
-            {
-                double x = instant.ToOADate();
-                _points.Add(x, valeur);
-            }
+                _points.Add(instant.ToOADate(), valeur);
             _zedGraph.AxisChange();
             _zedGraph.Invalidate();
         }

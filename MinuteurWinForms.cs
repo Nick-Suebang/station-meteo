@@ -1,20 +1,17 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace station_meteo
 {
-    class MinuteurWinForms : IMinuteur
+    /// <summary>Adapte le Timer de Windows Forms à l'interface IMinuteur.</summary>
+    sealed class MinuteurWinForms : IMinuteur, IDisposable
     {
-        private Timer _timer;
+        private readonly Timer _timer = new Timer();
+
         public event Action Tick;
 
         public MinuteurWinForms()
         {
-            _timer = new Timer();
             _timer.Tick += (s, e) => Tick?.Invoke();
         }
 
@@ -27,6 +24,11 @@ namespace station_meteo
         public void Arreter()
         {
             _timer.Stop();
+        }
+
+        public void Dispose()
+        {
+            _timer.Dispose();
         }
     }
 }

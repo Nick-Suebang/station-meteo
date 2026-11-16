@@ -1,26 +1,31 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace station_meteo
 {
+    /// <summary>
+    /// Capteur simulé qui renvoie une valeur aléatoire dans un intervalle.
+    /// </summary>
     class CapteurRandom : ICapteur
     {
-        private float _minimum;
-        private float _maximum;
-        private Random _random;
+        // Un seul générateur partagé : créer un Random par lecture donnait la même valeur
+        // à tous les capteurs lus dans la même milliseconde (.NET Framework se base sur l'horloge).
+        private static readonly Random GenerateurPartage = new Random();
 
-        public CapteurRandom(float minimum, float maximum)
+        private readonly float _minimum;
+        private readonly float _maximum;
+        private readonly Random _random;
+
+        public CapteurRandom(float minimum, float maximum, Random random = null)
         {
+            if (minimum > maximum)
+                throw new ArgumentException("Le minimum doit être inférieur ou égal au maximum.", nameof(minimum));
             _minimum = minimum;
             _maximum = maximum;
+            _random = random ?? GenerateurPartage;
         }
 
         public float LireMesure()
         {
-            _random = new Random();
             return (float)(_minimum + _random.NextDouble() * (_maximum - _minimum));
         }
     }

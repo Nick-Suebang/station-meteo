@@ -1,11 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 
 namespace station_meteo
 {
+    /// <summary>Fournit l'historique des mesures d'un capteur.</summary>
     interface IDonnees
     {
         List<float> RecupererDonnees(string nomCapteur);

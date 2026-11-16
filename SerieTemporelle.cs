@@ -1,18 +1,20 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace station_meteo
 {
+    /// <summary>
+    /// Garde les derniers points d'une mesure : au-delà de la taille maximale, le plus ancien est retiré.
+    /// </summary>
     class SerieTemporelle : ISerieTemporelle
     {
-        private int _maxPoints;
-        private LinkedList<(DateTime, float)> _points = new LinkedList<(DateTime, float)>();
+        private readonly int _maxPoints;
+        private readonly LinkedList<(DateTime instant, float valeur)> _points = new LinkedList<(DateTime instant, float valeur)>();
 
         public SerieTemporelle(int maxPoints)
         {
+            if (maxPoints <= 0)
+                throw new ArgumentOutOfRangeException(nameof(maxPoints));
             _maxPoints = maxPoints;
         }
 

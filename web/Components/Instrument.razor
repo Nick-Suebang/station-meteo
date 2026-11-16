@@ -1,4 +1,4 @@
-@using System.Globalization
+﻿@using System.Globalization
 @using StationMeteoWeb.Web
 
 <article class="instrument" style="--trace: @Graphique.Couleur">
@@ -8,7 +8,7 @@
             @if (Graphique.Points.Count > 0)
             {
                 <span class="lecture-valeur">@Format(Graphique.Points[^1].valeur)</span>
-                <span class="lecture-unite">@Unite</span>
+                <span class="lecture-unite">@Graphique.Unite</span>
             }
             else
             {
@@ -64,7 +64,6 @@
 
 @code {
     [Parameter, EditorRequired] public GraphiqueSvg Graphique { get; set; }
-    [Parameter] public string Unite { get; set; } = "";
     [Parameter] public int Decimales { get; set; } = 1;
 
     private const int Largeur = 600;
@@ -113,6 +112,6 @@
     {
         if (Graphique.Points.Count == 0)
             return $"{Graphique.Titre} : aucune mesure pour l'instant";
-        return $"{Graphique.Titre} : {Graphique.Points.Count} dernières mesures, la plus récente vaut {Format(Graphique.Points[^1].valeur)} {Unite}";
+        return $"{Graphique.Titre} : {Graphique.Points.Count} dernières mesures, la plus récente vaut {Format(Graphique.Points[^1].valeur)} {Graphique.Unite}";
     }
 }

@@ -1,11 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace station_meteo
+﻿namespace station_meteo
 {
+    /// <summary>Source d'une mesure (réelle ou simulée).</summary>
     interface ICapteur
     {
         float LireMesure();

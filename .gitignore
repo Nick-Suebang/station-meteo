@@ -400,8 +400,8 @@ FodyWeavers.xsd
 *.sln.iml
 
 # Version web (Blazor)
-web/bin/
-web/obj/
+bin/
+obj/
 publication/
 .claude/launch.json
 

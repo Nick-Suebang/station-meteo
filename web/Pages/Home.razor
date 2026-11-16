@@ -1,10 +1,8 @@
 ﻿@page "/"
-@using System.Drawing
 @using station_meteo
 @using StationMeteoWeb.Web
 @using StationMeteoWeb.Components
 @implements IDisposable
-@inject HttpClient Http
 
 <PageTitle>Station météo</PageTitle>
 
@@ -20,9 +18,9 @@
             </div>
 
             <button type="button" class="bouton-principal @(_enMarche ? "en-marche" : "")"
-                    @onclick="BasculerAsync" disabled="@_chargement">
+                    @onclick="Basculer">
                 <span class="voyant" aria-hidden="true"></span>
-                @(_chargement ? "Chargement des données…" : _enMarche ? "Arrêter la station" : "Lancer la station")
+                @(_enMarche ? "Arrêter la station" : "Lancer la station")
             </button>
         </div>
 
@@ -31,12 +29,12 @@
                 <legend>Source des mesures</legend>
                 <label>
                     <input type="radio" name="source" checked="@_utiliseCsv"
-                           @onchange="() => ChangerSourceAsync(true)" />
+                           @onchange="() => ChangerSource(true)" />
                     <span>Relevés réels (CSV)</span>
                 </label>
                 <label>
                     <input type="radio" name="source" checked="@(!_utiliseCsv)"
-                           @onchange="() => ChangerSourceAsync(false)" />
+                           @onchange="() => ChangerSource(false)" />
                     <span>Capteurs aléatoires</span>
                 </label>
             </fieldset>
@@ -55,7 +53,7 @@
 
             <fieldset class="capteurs">
                 <legend>Capteurs affichés</legend>
-                @for (int i = 0; i < Capteurs.Length; i++)
+                @for (int i = 0; i < Capteurs.Count; i++)
                 {
                     var index = i;
                     <label style="--trace: @_graphiques[index].Couleur">
@@ -73,11 +71,11 @@
         }
 
         <div class="instruments">
-            @for (int i = 0; i < Capteurs.Length; i++)
+            @for (int i = 0; i < Capteurs.Count; i++)
             {
                 if (_visibles[i])
                 {
-                    <Instrument Graphique="_graphiques[i]" Unite="@Capteurs[i].Unite" Decimales="@Capteurs[i].Decimales" />
+                    <Instrument Graphique="_graphiques[i]" Decimales="@Capteurs[i].Decimales" />
                 }
             }
         </div>
@@ -98,13 +96,14 @@
                     <li><code>SerieTemporelle</code> garde les dix dernières mesures.</li>
                     <li><code>CapteurCsv</code> et <code>DonneesCsv</code> lisent les relevés du fichier <code>donnees.csv</code>.</li>
                     <li><code>CapteurRandom</code> génère des valeurs dans un intervalle.</li>
+                    <li><code>DefinitionCapteur</code> décrit les cinq capteurs (colonne, unité, couleur, intervalle).</li>
                     <li>Les interfaces <code>ICapteur</code>, <code>IGraphique</code>, <code>IMinuteur</code>, <code>IDonnees</code>…</li>
                 </ul>
             </div>
             <div>
                 <h3>Réécrit pour le Web</h3>
                 <ul>
-                    <li><code>Form1</code> devient cette page.</li>
+                    <li><code>FenetrePrincipale</code> devient cette page.</li>
                     <li><code>ZedGraphique</code> devient <code>GraphiqueSvg</code>, qui dessine les courbes en SVG.</li>
                     <li><code>MinuteurWinForms</code> devient <code>MinuteurWeb</code>, avec une cadence accélérable.</li>
                 </ul>
@@ -114,17 +113,7 @@
 </main>
 
 @code {
-    private record Capteur(string Colonne, string Titre, string Unite, Color Couleur, float Min, float Max, int Decimales);
-
-    // Mêmes colonnes, couleurs et intervalles que Form1 (la direction du vent est en dizaines de degrés).
-    private static readonly Capteur[] Capteurs =
-    {
-        new("Temp (°C)", "Température", "°C", Color.FromArgb(0xC8, 0x32, 0x2B), -10f, 30f, 1),
-        new("Hum. rel (%)", "Humidité relative", "%", Color.FromArgb(0x7A, 0x3E, 0x9D), 0f, 100f, 0),
-        new("Dir. du vent (10s deg)", "Direction du vent", "× 10°", Color.FromArgb(0xC2, 0x6A, 0x12), 0f, 36f, 0),
-        new("Vit. du vent (km/h)", "Vitesse du vent", "km/h", Color.FromArgb(0x2B, 0x7A, 0x4B), 0f, 100f, 0),
-        new("Pression à la station (kPa)", "Pression", "kPa", Color.FromArgb(0x1F, 0x5F, 0xB8), 95f, 105f, 2),
-    };
+    private static readonly IReadOnlyList<DefinitionCapteur> Capteurs = DefinitionCapteur.Tous;
 
     private static readonly (int vitesse, string libelle)[] Vitesses =
     {
@@ -135,41 +124,40 @@
 
     private const string FichierCsv = "donnees.csv";
 
-    private readonly GraphiqueSvg[] _graphiques = new GraphiqueSvg[Capteurs.Length];
-    private readonly bool[] _visibles = Enumerable.Repeat(true, Capteurs.Length).ToArray();
+    private readonly GraphiqueSvg[] _graphiques = new GraphiqueSvg[Capteurs.Count];
+    private readonly bool[] _visibles = Enumerable.Repeat(true, Capteurs.Count).ToArray();
     private StationMeteo _station;
     private MinuteurWeb _minuteur;
     private bool _utiliseCsv = true;
     private bool _enMarche;
-    private bool _chargement;
     private bool _csvPret;
     private int _vitesse = 10;
     private string _erreur;
 
     protected override void OnInitialized()
     {
-        for (int i = 0; i < Capteurs.Length; i++)
+        for (int i = 0; i < Capteurs.Count; i++)
         {
             _graphiques[i] = new GraphiqueSvg();
             _graphiques[i].Configurer(Capteurs[i].Titre, "Temps", Capteurs[i].Unite, Capteurs[i].Couleur);
         }
     }
 
-    private async Task BasculerAsync()
+    private void Basculer()
     {
         if (_enMarche)
             Arreter();
         else
-            await InitialiserCapteursAsync();
+            InitialiserCapteurs();
     }
 
-    // Équivalent de Form1.InitialiserCapteurs().
-    private async Task InitialiserCapteursAsync()
+    // Équivalent de FenetrePrincipale.InitialiserCapteurs().
+    private void InitialiserCapteurs()
     {
         _erreur = null;
         Arreter();
 
-        if (_utiliseCsv && !await PreparerCsvAsync())
+        if (_utiliseCsv && !PreparerCsv())
             return;
 
         _station = new StationMeteo();
@@ -177,61 +165,53 @@
         _station.MettreMinuteur(_minuteur);
         _minuteur.Tick += () => InvokeAsync(StateHasChanged);
 
-        var donnees = _utiliseCsv ? new DonneesCsv(FichierCsv) : null;
-        for (int i = 0; i < Capteurs.Length; i++)
+        IDonnees donnees = _utiliseCsv ? new DonneesCsv(FichierCsv) : null;
+        for (int i = 0; i < Capteurs.Count; i++)
         {
-            ICapteur capteur = _utiliseCsv
-                ? new CapteurCsv(Capteurs[i].Colonne, donnees)
-                : new CapteurRandom(Capteurs[i].Min, Capteurs[i].Max);
             _graphiques[i].Effacer();
-            _station.Enregistrer(capteur, _graphiques[i]);
+            _station.Enregistrer(Capteurs[i].CreerCapteur(donnees), _graphiques[i]);
         }
 
         _enMarche = true;
         _station.Demarrer();
     }
 
-    // DonneesCsv lit un fichier sur disque : on télécharge donnees.csv
-    // et on l'écrit dans le système de fichiers virtuel du navigateur.
-    private async Task<bool> PreparerCsvAsync()
+    // DonneesCsv lit un fichier sur disque : on copie donnees.csv, intégré à l'application,
+    // dans le système de fichiers virtuel du navigateur.
+    private bool PreparerCsv()
     {
         if (_csvPret)
             return true;
 
-        _chargement = true;
-        StateHasChanged();
         try
         {
-            var contenu = await Http.GetStringAsync(FichierCsv);
-            await File.WriteAllTextAsync(FichierCsv, contenu);
+            using var source = typeof(Home).Assembly.GetManifestResourceStream(FichierCsv)
+                ?? throw new FileNotFoundException("Relevés introuvables dans l'application.", FichierCsv);
+            using var destination = File.Create(FichierCsv);
+            source.CopyTo(destination);
             _csvPret = true;
             return true;
         }
         catch (Exception ex)
         {
-            _erreur = $"Impossible de charger les relevés ({ex.Message}). Rechargez la page ou passez aux capteurs aléatoires.";
+            _erreur = $"Impossible de charger les relevés ({ex.Message}). Passez aux capteurs aléatoires.";
             return false;
-        }
-        finally
-        {
-            _chargement = false;
         }
     }
 
     private void Arreter()
     {
-        if (_station != null && _minuteur != null)
-            _station.Arreter();
+        _station?.Arreter();
         _minuteur?.Dispose();
         _minuteur = null;
         _enMarche = false;
     }
 
-    private async Task ChangerSourceAsync(bool csv)
+    private void ChangerSource(bool csv)
     {
         _utiliseCsv = csv;
         if (_enMarche)
-            await InitialiserCapteursAsync();
+            InitialiserCapteurs();
     }
 
     private void ChangerVitesse(int vitesse)

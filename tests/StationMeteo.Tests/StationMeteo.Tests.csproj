@@ -1,0 +1,38 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>disable</Nullable>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <!-- Logique de la station (indépendante de l'interface), compilée depuis la racine. -->
+  <ItemGroup>
+    <Compile Include="..\..\ICapteur.cs" Link="Origine\ICapteur.cs" />
+    <Compile Include="..\..\IDonnees.cs" Link="Origine\IDonnees.cs" />
+    <Compile Include="..\..\IGraphique.cs" Link="Origine\IGraphique.cs" />
+    <Compile Include="..\..\IMinuteur.cs" Link="Origine\IMinuteur.cs" />
+    <Compile Include="..\..\ISerieTemporelle.cs" Link="Origine\ISerieTemporelle.cs" />
+    <Compile Include="..\..\IStationMeteo.cs" Link="Origine\IStationMeteo.cs" />
+    <Compile Include="..\..\StationMeteo.cs" Link="Origine\StationMeteo.cs" />
+    <Compile Include="..\..\SerieTemporelle.cs" Link="Origine\SerieTemporelle.cs" />
+    <Compile Include="..\..\CapteurCsv.cs" Link="Origine\CapteurCsv.cs" />
+    <Compile Include="..\..\CapteurRandom.cs" Link="Origine\CapteurRandom.cs" />
+    <Compile Include="..\..\DonneesCsv.cs" Link="Origine\DonneesCsv.cs" />
+    <Compile Include="..\..\DefinitionCapteur.cs" Link="Origine\DefinitionCapteur.cs" />
+    <None Include="..\..\donnees.csv" Link="donnees.csv" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="coverlet.collector" Version="6.0.4" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
+    <PackageReference Include="xunit" Version="2.9.3" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="3.1.4" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Xunit" />
+  </ItemGroup>
+
+</Project>

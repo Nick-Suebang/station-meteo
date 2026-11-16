@@ -1,4 +1,4 @@
-using System.Drawing;
+﻿using System.Drawing;
 using station_meteo;
 
 namespace StationMeteoWeb.Web
@@ -14,15 +14,15 @@ namespace StationMeteoWeb.Web
 
         public IReadOnlyList<(DateTime instant, float valeur)> Points => _points;
         public string Titre { get; private set; } = "";
-        public string AxeX { get; private set; } = "";
-        public string AxeY { get; private set; } = "";
+        /// <summary>Unité affichée à côté de la lecture (le titre de l'axe Y).</summary>
+        public string Unite { get; private set; } = "";
         public string Couleur { get; private set; } = "currentColor";
 
         public void Configurer(string titre, string axeX, string axeY, Color couleur)
         {
             Titre = titre;
-            AxeX = axeX;
-            AxeY = axeY;
+            // L'axe X est toujours le temps : son titre n'est pas affiché.
+            Unite = axeY;
             Couleur = $"#{couleur.R:X2}{couleur.G:X2}{couleur.B:X2}";
         }
 
