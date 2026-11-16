@@ -1,0 +1,118 @@
+@using System.Globalization
+@using StationMeteoWeb.Web
+
+<article class="instrument" style="--trace: @Graphique.Couleur">
+    <header class="instrument-tete">
+        <h2>@Graphique.Titre</h2>
+        <p class="lecture" aria-live="off">
+            @if (Graphique.Points.Count > 0)
+            {
+                <span class="lecture-valeur">@Format(Graphique.Points[^1].valeur)</span>
+                <span class="lecture-unite">@Unite</span>
+            }
+            else
+            {
+                <span class="lecture-valeur lecture-vide">–</span>
+            }
+        </p>
+    </header>
+
+    <svg viewBox="0 0 @Largeur @Hauteur" class="trace" role="img"
+         aria-label="@DescriptionAccessible()">
+        @if (Graphique.Points.Count == 0)
+        {
+            <g><text x="@N(Largeur / 2.0)" y="@N(Hauteur / 2.0)" class="trace-vide" text-anchor="middle">
+                En attente de la première mesure
+            </text></g>
+        }
+        else
+        {
+            var (yMin, yMax) = PlageY();
+            for (int i = 0; i <= NbGraduations; i++)
+            {
+                var v = yMin + (yMax - yMin) * i / NbGraduations;
+                var y = Y(v, yMin, yMax);
+                <line x1="@MargeG" x2="@(Largeur - MargeD)" y1="@N(y)" y2="@N(y)" class="grille" />
+                <g><text x="@(MargeG - 8)" y="@N(y + 4)" class="graduation" text-anchor="end">@Format(v)</text></g>
+            }
+
+            var points = Graphique.Points;
+            var t0 = points[0].instant;
+            var duree = Math.Max((points[^1].instant - t0).TotalSeconds, 1);
+
+            <polyline class="courbe" points="@Polyligne(yMin, yMax, t0, duree)" />
+
+            foreach (var (instant, valeur) in points)
+            {
+                var x = X(instant, t0, duree);
+                var y = Y(valeur, yMin, yMax);
+                <rect x="@N(x - 3.5)" y="@N(y - 3.5)" width="7" height="7" class="point"
+                      transform="rotate(45 @N(x) @N(y))" />
+            }
+
+            foreach (var i in IndicesEtiquettesTemps(points.Count))
+            {
+                var instant = points[i].instant;
+                var ancre = i == 0 ? "start" : i == points.Count - 1 ? "end" : "middle";
+                <g><text x="@N(X(instant, t0, duree))" y="@(Hauteur - 8)" class="graduation" text-anchor="@ancre">
+                    @instant.ToString("HH:mm:ss", CultureInfo.InvariantCulture)
+                </text></g>
+            }
+        }
+    </svg>
+</article>
+
+@code {
+    [Parameter, EditorRequired] public GraphiqueSvg Graphique { get; set; }
+    [Parameter] public string Unite { get; set; } = "";
+    [Parameter] public int Decimales { get; set; } = 1;
+
+    private const int Largeur = 600;
+    private const int Hauteur = 230;
+    private const int MargeG = 56;
+    private const int MargeD = 18;
+    private const int MargeH = 14;
+    private const int MargeB = 32;
+    private const int NbGraduations = 4;
+
+    private (double min, double max) PlageY()
+    {
+        double min = Graphique.Points.Min(p => p.valeur);
+        double max = Graphique.Points.Max(p => p.valeur);
+        if (max - min < 1e-6)
+        {
+            var marge = Math.Max(Math.Abs(min) * 0.05, 1);
+            return (min - marge, max + marge);
+        }
+        var pad = (max - min) * 0.15;
+        return (min - pad, max + pad);
+    }
+
+    private static double Y(double v, double min, double max) =>
+        MargeH + (1 - (v - min) / (max - min)) * (Hauteur - MargeH - MargeB);
+
+    private static double X(DateTime instant, DateTime t0, double duree) =>
+        MargeG + (instant - t0).TotalSeconds / duree * (Largeur - MargeG - MargeD);
+
+    private string Polyligne(double yMin, double yMax, DateTime t0, double duree) =>
+        string.Join(" ", Graphique.Points.Select(p => $"{N(X(p.instant, t0, duree))},{N(Y(p.valeur, yMin, yMax))}"));
+
+    private static IEnumerable<int> IndicesEtiquettesTemps(int n)
+    {
+        if (n == 1) return new[] { 0 };
+        if (n < 5) return new[] { 0, n - 1 };
+        return new[] { 0, (n - 1) / 2, n - 1 };
+    }
+
+    private string Format(double v) =>
+        v.ToString("F" + Decimales, CultureInfo.InvariantCulture).Replace('.', ',');
+
+    private static string N(double v) => v.ToString("0.##", CultureInfo.InvariantCulture);
+
+    private string DescriptionAccessible()
+    {
+        if (Graphique.Points.Count == 0)
+            return $"{Graphique.Titre} : aucune mesure pour l'instant";
+        return $"{Graphique.Titre} : {Graphique.Points.Count} dernières mesures, la plus récente vaut {Format(Graphique.Points[^1].valeur)} {Unite}";
+    }
+}

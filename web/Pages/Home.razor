@@ -1,0 +1,245 @@
+﻿@page "/"
+@using System.Drawing
+@using station_meteo
+@using StationMeteoWeb.Web
+@using StationMeteoWeb.Components
+@implements IDisposable
+@inject HttpClient Http
+
+<PageTitle>Station météo</PageTitle>
+
+<main class="page">
+    <section class="tableau" aria-labelledby="titre">
+        <div class="tableau-tete">
+            <div class="intro">
+                <h1 id="titre">Station météo</h1>
+                <p>
+                    Mon projet de fin de session en C#, qui tourne directement dans votre navigateur.
+                    Appuyez sur le bouton : la station lit ses cinq capteurs et trace les dix dernières mesures de chacun.
+                </p>
+            </div>
+
+            <button type="button" class="bouton-principal @(_enMarche ? "en-marche" : "")"
+                    @onclick="BasculerAsync" disabled="@_chargement">
+                <span class="voyant" aria-hidden="true"></span>
+                @(_chargement ? "Chargement des données…" : _enMarche ? "Arrêter la station" : "Lancer la station")
+            </button>
+        </div>
+
+        <div class="reglages">
+            <fieldset class="segment">
+                <legend>Source des mesures</legend>
+                <label>
+                    <input type="radio" name="source" checked="@_utiliseCsv"
+                           @onchange="() => ChangerSourceAsync(true)" />
+                    <span>Relevés réels (CSV)</span>
+                </label>
+                <label>
+                    <input type="radio" name="source" checked="@(!_utiliseCsv)"
+                           @onchange="() => ChangerSourceAsync(false)" />
+                    <span>Capteurs aléatoires</span>
+                </label>
+            </fieldset>
+
+            <fieldset class="segment">
+                <legend>Cadence</legend>
+                @foreach (var (vitesse, libelle) in Vitesses)
+                {
+                    <label>
+                        <input type="radio" name="vitesse" checked="@(_vitesse == vitesse)"
+                               @onchange="() => ChangerVitesse(vitesse)" />
+                        <span>@libelle</span>
+                    </label>
+                }
+            </fieldset>
+
+            <fieldset class="capteurs">
+                <legend>Capteurs affichés</legend>
+                @for (int i = 0; i < Capteurs.Length; i++)
+                {
+                    var index = i;
+                    <label style="--trace: @_graphiques[index].Couleur">
+                        <input type="checkbox" checked="@_visibles[index]"
+                               @onchange="e => _visibles[index] = (bool)e.Value" />
+                        <span>@Capteurs[index].Titre</span>
+                    </label>
+                }
+            </fieldset>
+        </div>
+
+        @if (_erreur != null)
+        {
+            <p class="erreur" role="alert">@_erreur</p>
+        }
+
+        <div class="instruments">
+            @for (int i = 0; i < Capteurs.Length; i++)
+            {
+                if (_visibles[i])
+                {
+                    <Instrument Graphique="_graphiques[i]" Unite="@Capteurs[i].Unite" Decimales="@Capteurs[i].Decimales" />
+                }
+            }
+        </div>
+    </section>
+
+    <section class="coulisses" aria-labelledby="coulisses-titre">
+        <h2 id="coulisses-titre">Comment ça fonctionne</h2>
+        <p>
+            L'application d'origine est un programme Windows Forms. Grâce à Blazor WebAssembly, le même code C#
+            est compilé pour le navigateur : rien n'est envoyé à un serveur, tout s'exécute sur votre appareil.
+            Comme le programme a été conçu autour d'interfaces, seule la partie affichage a dû être remplacée.
+        </p>
+        <div class="colonnes">
+            <div>
+                <h3>Repris tel quel</h3>
+                <ul>
+                    <li><code>StationMeteo</code> relie chaque capteur à son graphique à chaque tic du minuteur.</li>
+                    <li><code>SerieTemporelle</code> garde les dix dernières mesures.</li>
+                    <li><code>CapteurCsv</code> et <code>DonneesCsv</code> lisent les relevés du fichier <code>donnees.csv</code>.</li>
+                    <li><code>CapteurRandom</code> génère des valeurs dans un intervalle.</li>
+                    <li>Les interfaces <code>ICapteur</code>, <code>IGraphique</code>, <code>IMinuteur</code>, <code>IDonnees</code>…</li>
+                </ul>
+            </div>
+            <div>
+                <h3>Réécrit pour le Web</h3>
+                <ul>
+                    <li><code>Form1</code> devient cette page.</li>
+                    <li><code>ZedGraphique</code> devient <code>GraphiqueSvg</code>, qui dessine les courbes en SVG.</li>
+                    <li><code>MinuteurWinForms</code> devient <code>MinuteurWeb</code>, avec une cadence accélérable.</li>
+                </ul>
+            </div>
+        </div>
+    </section>
+</main>
+
+@code {
+    private record Capteur(string Colonne, string Titre, string Unite, Color Couleur, float Min, float Max, int Decimales);
+
+    // Mêmes colonnes, couleurs et intervalles que Form1 (la direction du vent est en dizaines de degrés).
+    private static readonly Capteur[] Capteurs =
+    {
+        new("Temp (°C)", "Température", "°C", Color.FromArgb(0xC8, 0x32, 0x2B), -10f, 30f, 1),
+        new("Hum. rel (%)", "Humidité relative", "%", Color.FromArgb(0x7A, 0x3E, 0x9D), 0f, 100f, 0),
+        new("Dir. du vent (10s deg)", "Direction du vent", "× 10°", Color.FromArgb(0xC2, 0x6A, 0x12), 0f, 36f, 0),
+        new("Vit. du vent (km/h)", "Vitesse du vent", "km/h", Color.FromArgb(0x2B, 0x7A, 0x4B), 0f, 100f, 0),
+        new("Pression à la station (kPa)", "Pression", "kPa", Color.FromArgb(0x1F, 0x5F, 0xB8), 95f, 105f, 2),
+    };
+
+    private static readonly (int vitesse, string libelle)[] Vitesses =
+    {
+        (1, "1 mesure / 10 s"),
+        (10, "1 mesure / s"),
+        (40, "4 mesures / s"),
+    };
+
+    private const string FichierCsv = "donnees.csv";
+
+    private readonly GraphiqueSvg[] _graphiques = new GraphiqueSvg[Capteurs.Length];
+    private readonly bool[] _visibles = Enumerable.Repeat(true, Capteurs.Length).ToArray();
+    private StationMeteo _station;
+    private MinuteurWeb _minuteur;
+    private bool _utiliseCsv = true;
+    private bool _enMarche;
+    private bool _chargement;
+    private bool _csvPret;
+    private int _vitesse = 10;
+    private string _erreur;
+
+    protected override void OnInitialized()
+    {
+        for (int i = 0; i < Capteurs.Length; i++)
+        {
+            _graphiques[i] = new GraphiqueSvg();
+            _graphiques[i].Configurer(Capteurs[i].Titre, "Temps", Capteurs[i].Unite, Capteurs[i].Couleur);
+        }
+    }
+
+    private async Task BasculerAsync()
+    {
+        if (_enMarche)
+            Arreter();
+        else
+            await InitialiserCapteursAsync();
+    }
+
+    // Équivalent de Form1.InitialiserCapteurs().
+    private async Task InitialiserCapteursAsync()
+    {
+        _erreur = null;
+        Arreter();
+
+        if (_utiliseCsv && !await PreparerCsvAsync())
+            return;
+
+        _station = new StationMeteo();
+        _minuteur = new MinuteurWeb { Vitesse = _vitesse };
+        _station.MettreMinuteur(_minuteur);
+        _minuteur.Tick += () => InvokeAsync(StateHasChanged);
+
+        var donnees = _utiliseCsv ? new DonneesCsv(FichierCsv) : null;
+        for (int i = 0; i < Capteurs.Length; i++)
+        {
+            ICapteur capteur = _utiliseCsv
+                ? new CapteurCsv(Capteurs[i].Colonne, donnees)
+                : new CapteurRandom(Capteurs[i].Min, Capteurs[i].Max);
+            _graphiques[i].Effacer();
+            _station.Enregistrer(capteur, _graphiques[i]);
+        }
+
+        _enMarche = true;
+        _station.Demarrer();
+    }
+
+    // DonneesCsv lit un fichier sur disque : on télécharge donnees.csv
+    // et on l'écrit dans le système de fichiers virtuel du navigateur.
+    private async Task<bool> PreparerCsvAsync()
+    {
+        if (_csvPret)
+            return true;
+
+        _chargement = true;
+        StateHasChanged();
+        try
+        {
+            var contenu = await Http.GetStringAsync(FichierCsv);
+            await File.WriteAllTextAsync(FichierCsv, contenu);
+            _csvPret = true;
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _erreur = $"Impossible de charger les relevés ({ex.Message}). Rechargez la page ou passez aux capteurs aléatoires.";
+            return false;
+        }
+        finally
+        {
+            _chargement = false;
+        }
+    }
+
+    private void Arreter()
+    {
+        if (_station != null && _minuteur != null)
+            _station.Arreter();
+        _minuteur?.Dispose();
+        _minuteur = null;
+        _enMarche = false;
+    }
+
+    private async Task ChangerSourceAsync(bool csv)
+    {
+        _utiliseCsv = csv;
+        if (_enMarche)
+            await InitialiserCapteursAsync();
+    }
+
+    private void ChangerVitesse(int vitesse)
+    {
+        _vitesse = vitesse;
+        if (_minuteur != null)
+            _minuteur.Vitesse = vitesse;
+    }
+
+    public void Dispose() => Arreter();
+}

@@ -1,0 +1,415 @@
+/* Palette : ciel d'hiver, encre d'ardoise, bleu d'instrument. */
+:root {
+    --fond: #e6ecf1;
+    --surface: #ffffff;
+    --encre: #16232d;
+    --encre-douce: #556673;
+    --grille: #d3dce3;
+    --bordure: #c3ced7;
+    --action: #1d5a9e;
+    --action-texte: #ffffff;
+    --marche: #2f8a55;
+    --erreur: #a3271f;
+    color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+    :root {
+        --fond: #0f1820;
+        --surface: #16222c;
+        --encre: #e2e9ef;
+        --encre-douce: #93a4b2;
+        --grille: #26343f;
+        --bordure: #2f3f4c;
+        --action: #5b9be0;
+        --action-texte: #0f1820;
+        --marche: #5cc489;
+        --erreur: #f08a80;
+        color-scheme: dark;
+    }
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+/* Couleur de courbe fournie par le C# ; éclaircie en mode sombre pour rester lisible. */
+.instrument, .capteurs label { --trace-vis: var(--trace); }
+
+@media (prefers-color-scheme: dark) {
+    .instrument, .capteurs label { --trace-vis: color-mix(in srgb, var(--trace) 70%, white); }
+}
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+    margin: 0;
+    background: var(--fond);
+    color: var(--encre);
+    font-family: "Barlow", system-ui, sans-serif;
+    font-size: 1.0625rem;
+    line-height: 1.5;
+}
+
+code {
+    font-family: "Barlow Semi Condensed", "Barlow", sans-serif;
+    font-weight: 600;
+    font-size: 0.95em;
+}
+
+:focus-visible {
+    outline: 3px solid var(--action);
+    outline-offset: 2px;
+}
+
+.page {
+    max-width: 76rem;
+    margin: 0 auto;
+    padding: 2.5rem 1.5rem 4rem;
+}
+
+/* En-tête : titre à gauche, bouton de lancement à droite. */
+.tableau-tete {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 1.5rem 3rem;
+    margin-bottom: 2rem;
+}
+
+.intro { max-width: 40rem; }
+
+h1 {
+    font-family: "Barlow Semi Condensed", "Barlow", sans-serif;
+    font-weight: 600;
+    font-size: clamp(2.5rem, 6vw, 4rem);
+    line-height: 1;
+    letter-spacing: -0.01em;
+    margin: 0 0 0.75rem;
+}
+
+.intro p {
+    margin: 0;
+    color: var(--encre-douce);
+}
+
+.bouton-principal {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75rem;
+    min-height: 3.5rem;
+    padding: 0 1.75rem;
+    border: none;
+    border-radius: 999px;
+    background: var(--action);
+    color: var(--action-texte);
+    font: 600 1.15rem/1 "Barlow", sans-serif;
+    cursor: pointer;
+}
+
+.bouton-principal:hover { filter: brightness(1.08); }
+.bouton-principal:disabled { opacity: 0.7; cursor: progress; }
+
+.bouton-principal.en-marche {
+    background: transparent;
+    color: var(--encre);
+    box-shadow: inset 0 0 0 2px var(--bordure);
+}
+
+.voyant {
+    width: 0.7rem;
+    height: 0.7rem;
+    border-radius: 50%;
+    background: currentColor;
+    opacity: 0.55;
+}
+
+.en-marche .voyant {
+    background: var(--marche);
+    opacity: 1;
+    animation: pulsation 1.6s ease-in-out infinite;
+}
+
+@keyframes pulsation {
+    50% { box-shadow: 0 0 0 0.35rem color-mix(in srgb, var(--marche) 25%, transparent); }
+}
+
+/* Réglages */
+.reglages {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.25rem 2.5rem;
+    padding: 1.25rem 0;
+    border-top: 1px solid var(--bordure);
+    border-bottom: 1px solid var(--bordure);
+    margin-bottom: 1.75rem;
+}
+
+fieldset {
+    border: none;
+    margin: 0;
+    padding: 0;
+    min-width: 0;
+}
+
+legend {
+    padding: 0;
+    margin-bottom: 0.5rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--encre-douce);
+}
+
+.segment {
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.segment label { position: relative; }
+
+.segment input,
+.capteurs input {
+    position: absolute;
+    opacity: 0;
+    width: 1px;
+    height: 1px;
+}
+
+.segment span {
+    display: block;
+    padding: 0.45rem 0.9rem;
+    border: 1px solid var(--bordure);
+    margin-left: -1px;
+    background: var(--surface);
+    font-size: 0.95rem;
+    cursor: pointer;
+}
+
+.segment label:first-of-type span { border-radius: 6px 0 0 6px; margin-left: 0; }
+.segment label:last-of-type span { border-radius: 0 6px 6px 0; }
+
+.segment input:checked + span {
+    position: relative;
+    background: var(--encre);
+    border-color: var(--encre);
+    color: var(--fond);
+}
+
+.segment input:focus-visible + span,
+.capteurs input:focus-visible + span {
+    outline: 3px solid var(--action);
+    outline-offset: 2px;
+}
+
+.capteurs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+}
+
+.capteurs legend { width: 100%; }
+
+.capteurs label { position: relative; }
+
+.capteurs span {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.45rem 0.8rem;
+    border: 1px solid var(--bordure);
+    border-radius: 6px;
+    font-size: 0.95rem;
+    color: var(--encre-douce);
+    cursor: pointer;
+}
+
+.capteurs span::before {
+    content: "";
+    width: 0.75rem;
+    height: 0.75rem;
+    border-radius: 2px;
+    border: 2px solid var(--trace-vis);
+}
+
+.capteurs input:checked + span {
+    background: var(--surface);
+    color: var(--encre);
+}
+
+.capteurs input:checked + span::before { background: var(--trace-vis); }
+
+.erreur {
+    color: var(--erreur);
+    font-weight: 500;
+}
+
+/* Instruments : une lecture chiffrée + la trace des dix dernières mesures. */
+.instruments {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 30rem), 1fr));
+    gap: 1rem;
+}
+
+.instrument {
+    background: var(--surface);
+    border: 1px solid var(--bordure);
+    border-top: 4px solid var(--trace-vis);
+    border-radius: 4px 4px 8px 8px;
+    padding: 1.1rem 1.25rem 0.75rem;
+}
+
+.instrument-tete {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 1rem;
+}
+
+.instrument h2 {
+    margin: 0;
+    font-size: 1.05rem;
+    font-weight: 500;
+    color: var(--encre-douce);
+}
+
+.lecture {
+    margin: 0;
+    white-space: nowrap;
+}
+
+.lecture-valeur {
+    font-family: "Barlow Semi Condensed", "Barlow", sans-serif;
+    font-weight: 600;
+    font-size: 2.6rem;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+}
+
+.lecture-vide { color: var(--grille); }
+
+.lecture-unite {
+    margin-left: 0.3rem;
+    font-size: 1.05rem;
+    color: var(--encre-douce);
+}
+
+.trace {
+    display: block;
+    width: 100%;
+    height: auto;
+    margin-top: 0.5rem;
+}
+
+.trace .grille { stroke: var(--grille); stroke-width: 1; }
+
+.trace .graduation {
+    fill: var(--encre-douce);
+    font: 500 13px "Barlow", sans-serif;
+    font-variant-numeric: tabular-nums;
+}
+
+.trace .trace-vide { fill: var(--encre-douce); font: 15px "Barlow", sans-serif; }
+
+.trace .courbe {
+    fill: none;
+    stroke: var(--trace-vis);
+    stroke-width: 2.5;
+    stroke-linejoin: round;
+    stroke-linecap: round;
+}
+
+.trace .point {
+    fill: var(--surface);
+    stroke: var(--trace-vis);
+    stroke-width: 2;
+}
+
+/* Coulisses */
+.coulisses {
+    margin-top: 4rem;
+    max-width: 52rem;
+}
+
+.coulisses h2 {
+    font-family: "Barlow Semi Condensed", "Barlow", sans-serif;
+    font-weight: 600;
+    font-size: 1.75rem;
+    margin: 0 0 0.75rem;
+}
+
+.coulisses > p { margin: 0 0 1.5rem; }
+
+.colonnes {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 20rem), 1fr));
+    gap: 1.5rem 2.5rem;
+}
+
+.colonnes h3 {
+    margin: 0 0 0.5rem;
+    font-size: 1.05rem;
+    font-weight: 600;
+}
+
+.colonnes ul {
+    margin: 0;
+    padding-left: 1.1rem;
+    color: var(--encre-douce);
+}
+
+.colonnes li { margin-bottom: 0.4rem; }
+.colonnes code { color: var(--encre); }
+
+/* Écran de démarrage pendant le téléchargement de .NET. */
+.demarrage {
+    max-width: 20rem;
+    margin: 30vh auto 0;
+    padding: 0 1.5rem;
+    text-align: center;
+    color: var(--encre-douce);
+}
+
+.demarrage-barre {
+    height: 4px;
+    border-radius: 2px;
+    background: var(--grille);
+    overflow: hidden;
+}
+
+.demarrage-barre span {
+    display: block;
+    height: 100%;
+    width: var(--blazor-load-percentage, 0%);
+    background: var(--action);
+    transition: width 0.1s linear;
+}
+
+#blazor-error-ui {
+    display: none;
+    position: fixed;
+    inset: auto 0 0 0;
+    z-index: 1000;
+    padding: 0.75rem 1.25rem;
+    background: var(--erreur);
+    color: #fff;
+}
+
+#blazor-error-ui a { color: #fff; margin-left: 0.5rem; }
+
+#blazor-error-ui .dismiss {
+    position: absolute;
+    right: 1rem;
+    top: 0.5rem;
+    cursor: pointer;
+    font-size: 1.25rem;
+}
+
+@media (max-width: 40rem) {
+    .page { padding: 1.5rem 1rem 3rem; }
+    .bouton-principal { width: 100%; justify-content: center; }
+    .lecture-valeur { font-size: 2.1rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .en-marche .voyant { animation: none; }
+    .demarrage-barre span { transition: none; }
+}

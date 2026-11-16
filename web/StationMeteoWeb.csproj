@@ -1,0 +1,36 @@
+<Project Sdk="Microsoft.NET.Sdk.BlazorWebAssembly">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <!-- Le code d'origine a été écrit sans annotations de nullabilité. -->
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <OverrideHtmlAssetPlaceholders>true</OverrideHtmlAssetPlaceholders>
+    <!-- Garde la culture invariante pour l'analyse des nombres du CSV. -->
+    <InvariantGlobalization>true</InvariantGlobalization>
+  </PropertyGroup>
+
+  <!--
+    Code de la station météo d'origine (projet WinForms à la racine du dépôt),
+    réutilisé tel quel, sans copie : ces fichiers sont compilés directement.
+  -->
+  <ItemGroup>
+    <Compile Include="..\ICapteur.cs" Link="Origine\ICapteur.cs" />
+    <Compile Include="..\IDonnees.cs" Link="Origine\IDonnees.cs" />
+    <Compile Include="..\IGraphique.cs" Link="Origine\IGraphique.cs" />
+    <Compile Include="..\IMinuteur.cs" Link="Origine\IMinuteur.cs" />
+    <Compile Include="..\ISerieTemporelle.cs" Link="Origine\ISerieTemporelle.cs" />
+    <Compile Include="..\IStationMeteo.cs" Link="Origine\IStationMeteo.cs" />
+    <Compile Include="..\StationMeteo.cs" Link="Origine\StationMeteo.cs" />
+    <Compile Include="..\SerieTemporelle.cs" Link="Origine\SerieTemporelle.cs" />
+    <Compile Include="..\CapteurCsv.cs" Link="Origine\CapteurCsv.cs" />
+    <Compile Include="..\CapteurRandom.cs" Link="Origine\CapteurRandom.cs" />
+    <Compile Include="..\DonneesCsv.cs" Link="Origine\DonneesCsv.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="10.0.15" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="10.0.15" PrivateAssets="all" />
+  </ItemGroup>
+
+</Project>
