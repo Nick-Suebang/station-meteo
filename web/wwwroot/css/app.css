@@ -1,3 +1,10 @@
+/* Polices Barlow (licence SIL OFL), hébergées avec le site : aucune requête vers Google Fonts */
+@font-face { font-family: 'Barlow'; font-style: normal; font-weight: 400; font-display: swap; src: url('../fonts/barlow-latin-400-normal.woff2') format('woff2'); }
+@font-face { font-family: 'Barlow'; font-style: normal; font-weight: 500; font-display: swap; src: url('../fonts/barlow-latin-500-normal.woff2') format('woff2'); }
+@font-face { font-family: 'Barlow'; font-style: normal; font-weight: 600; font-display: swap; src: url('../fonts/barlow-latin-600-normal.woff2') format('woff2'); }
+@font-face { font-family: 'Barlow Semi Condensed'; font-style: normal; font-weight: 500; font-display: swap; src: url('../fonts/barlow-semi-condensed-latin-500-normal.woff2') format('woff2'); }
+@font-face { font-family: 'Barlow Semi Condensed'; font-style: normal; font-weight: 600; font-display: swap; src: url('../fonts/barlow-semi-condensed-latin-600-normal.woff2') format('woff2'); }
+
 /* Palette : ciel d'hiver, encre d'ardoise, bleu d'instrument. */
 :root {
     --fond: #e6ecf1;
@@ -412,3 +419,8 @@ legend {
     .en-marche .voyant { animation: none; }
     .demarrage-barre span { transition: none; }
 }
+
+/* Pied de page : auteur, contact et confidentialité */
+.credit { max-width: 1100px; margin: 40px auto 24px; padding: 16px 24px 0; border-top: 1px solid var(--bordure); color: var(--encre-douce); font-size: 0.82rem; line-height: 1.5; }
+.credit p { margin: 0 0 6px; }
+.credit a { color: inherit; text-decoration: underline; }

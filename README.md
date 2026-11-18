@@ -53,3 +53,12 @@ La version web est ensuite disponible sur http://localhost:5275.
 
 Le workflow `.github/workflows/publier-web.yml` lance les tests, puis publie la version web sur
 GitHub Pages à chaque push sur `main`.
+
+## Auteur et contact
+
+**Nick Suebang** (Nick Hariel Teponno Suebang), technicien en informatique et développeur web et mobile à Rimouski (QC).
+
+- Portfolio : [nicksuebang.com](https://nicksuebang.com)
+- Courriel : [contact@nicksuebang.com](mailto:contact@nicksuebang.com)
+- GitHub : [@Nick-Suebang](https://github.com/Nick-Suebang)
+- LinkedIn : [Nick Hariel Teponno Suebang](https://www.linkedin.com/in/nick-hariel-teponno-suebang-6a8875292/)
